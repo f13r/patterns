@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .main {
+        max-width: 300px;
+        margin: 2rem auto;
+      }
+
+      h1 {
+        display: flex;
+        justify-content: center;
+      }
+
+      .main ul li {
+        list-style: decimal;
+        font-size: 21px;
+      }
+
+      .form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .tasks {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .input {
+        margin-right: 10px;
+        padding: 0.375rem 0.75rem;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #bdbdbd;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      }
+
+      .button {
+        padding: 0.375rem 0.75rem;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #ffffff;
+        background-color: rgb(56, 38, 211);
+        background-clip: padding-box;
+        border: 1px solid #bdbdbd;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      }
+
+      .task {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <h1>Todos</h1>
+      <div class="form">
+        <input class="input" type="text" id="task" value="" />
+        <input class="button" type="button" id="add" value="Add task" />
+      </div>
+      <div class="tasks">
+        <ul id="list">
+          <li>New task</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module">
+      const createModel = () => {
+        let tasks = [
+          { id: 1, title: "Task 1" },
+          { id: 2, title: "Task 2" },
+          { id: 3, title: "Task 3" },
+          { id: 4, title: "Task 4" },
+        ];
+
+        let viewCallback = null;
+
+        const bindTriggerCallback = (callback) => {
+          viewCallback = callback;
+          trigger();
+        };
+
+        const trigger = () => {
+          viewCallback(tasks);
+        };
+
+        const withTrigger =
+          (callback) =>
+          (...args) => {
+            callback(args);
+            trigger();
+          };
+
+        const addTask = withTrigger((title) => {
+          if (title !== "") {
+            tasks = [...tasks, { id: tasks.length + 1, title }];
+          }
+        });
+
+        const removeTask = withTrigger((id) => {
+          tasks = tasks.filter((task) => task.id != id);
+        });
+
+        return {
+          addTask,
+          removeTask,
+          bindTriggerCallback,
+        };
+      };
+
+      const createView = () => {
+        const addButton = document.getElementById("add");
+        const task = document.getElementById("task");
+        const list = document.getElementById("list");
+
+        const bindAddTask = (handler) => {
+          addButton.addEventListener("click", (evt) => {
+            if (task.value) {
+              handler(task.value);
+              task.value = "";
+            }
+          });
+        };
+
+        const bindRemoveTask = (handler) => {
+          list.addEventListener("click", (evt) => {
+            handler(evt.target.id);
+          });
+        };
+
+        const renderTasks = (tasks) => {
+          list.innerHTML = "";
+          if (tasks.length === 0) {
+            const span = document.createElement("span");
+            span.innerText = "Empty list!";
+            list.appendChild(span);
+          } else {
+            const newList = tasks.forEach((task) => {
+              const li = document.createElement("li");
+              li.id = task.id;
+              const title = document.createTextNode(task.title);
+              li.appendChild(title);
+              list.appendChild(li);
+            });
+          }
+        };
+
+        return {
+          bindRemoveTask,
+          bindAddTask,
+          renderTasks,
+        };
+      };
+
+      const createController = (model, view) => {
+        model.bindTriggerCallback(view.renderTasks);
+        view.bindAddTask(model.addTask);
+        view.bindRemoveTask(model.removeTask);
+      };
+
+      const model = createModel();
+      const view = createView();
+      const controller = createController(model, view);
+    </script>
+  </body>
+</html>
